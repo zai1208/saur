@@ -1,0 +1,26 @@
+# Maintainer: Zai1208 <zai1208@outlook.com>
+pkgname=saur.sh
+pkgver=0.1
+pkgrel=1
+pkgdesc="A simple and \"secure\" AUR helper written entirely in Bash"
+arch=('any')
+url="https://github.com/zai1208/saur.sh"
+license=('GPL-3.0-or-later')
+makedepends=(git)
+depends=(bat bash)
+source=("git+$url")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$srcdir/$pkgname"
+    local tag
+    tag=$(git describe --tags --abbrev=0)
+    local commit
+    commit=$(git rev-parse --short HEAD)
+    printf "%s.%s" "$tag" "$commit"
+}
+
+package() {
+    install -Dm755 "$srcdir/$pkgname/saur.sh" "$pkgdir/usr/bin/$pkgname"
+    install -Dm644 "$srcdir/$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
