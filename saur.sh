@@ -21,6 +21,28 @@ confirm() {
   fi
 }
 
+check_maintainer_change() {
+  pkg="$1"
+  cache_file="$SAUR_DIR/maintainers.list"
+
+  current_maintainer=$(curl -fsSL "https://aur.archlinux.org/rpc/v5/info/$pkg" | jq -r '.results[0].Maintainer')
+
+  if grep -q "^$pkg:" "$cache_file" 2>/dev/null; then
+    old_maintainer=$(grep "^$pkg:" "$cache_file" | cut -d':' -f2-)
+    if [[ "$old_maintainer" != "$current_maintainer" ]]; then
+      echo -e "${RED}WARNING: Maintainer has changed from $old_maintainer to $current_maintainer!${NC}"
+      confirm "Do you wish to proceed despite the maintainer change?"
+    fi
+  else
+    echo "First time seeing $pkg, caching maintainer info."
+  fi
+
+  # Update cache
+  grep -v "^$pkg:" "$cache_file" 2>/dev/null > "$cache_file.tmp"
+  echo "$pkg:$current_maintainer" >> "$cache_file.tmp"
+  mv "$cache_file.tmp" "$cache_file"
+}
+
 fetch_safety_card() {
   pkg="$1"
   echo -e "${RED}Fetching package metadata from AUR...${NC}"
@@ -46,6 +68,8 @@ fetch_safety_card() {
   echo -e "${BLUE}Votes:${NC}      $votes"
   echo -e "${BLUE}Popularity:${NC} $popularity"
   echo -e "${RED}=====================${NC}"
+  
+  confirm "Do you trust this?"
 }
 
 show_pkgbuild_diff() {
@@ -70,6 +94,23 @@ fetch_aur_deps() {
   mapfile -t missing_aur_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | grep "not found in the repositories" | awk -F"'" '{print $2}')
 
   if [[ ${#missing_aur_deps[@]} -gt 0 ]]; then
+    maintainer_changed=()
+    cache_file="$SAUR_DIR/maintainers.list"
+    old_maintainer=""
+    if grep -q "^$dep:" "$cache_file" 2>/dev/null; then
+      old_maintainer=$(grep "^$dep:" "$cache_file" | cut -d':' -f2-)
+    fi
+    
+    # Add to maintainer_changed[] if changed
+    if [[ "$old_maintainer" != "" && "$old_maintainer" != "$maintainer" ]]; then
+      maintainer_changed+=("$dep:$old_maintainer -> $maintainer")
+    fi
+    
+    # Update maintainer cache
+    grep -v "^$dep:" "$cache_file" 2>/dev/null > "$cache_file.tmp"
+    echo "$dep:$maintainer" >> "$cache_file.tmp"
+    mv "$cache_file.tmp" "$cache_file"
+
     printf "\n${RED}==== AUR Dependency Summary ====${NC}\n"
     printf "%-20s | %-15s | %-10s | %-6s | %-10s | %-10s\n" "Package" "Maintainer" "Updated" "Votes" "Popularity" "Submitted"
     printf -- "---------------------------------------------------------------\n"
@@ -87,6 +128,15 @@ fetch_aur_deps() {
     done
 
     printf "${RED}=================================${NC}\n"
+
+    if [[ ${#maintainer_changed[@]} -gt 0 ]]; then
+      echo -e "\n${RED}WARNING: The following packages have changed maintainers:${NC}"
+      for entry in "${maintainer_changed[@]}"; do
+        echo " - $entry"
+      done
+      confirm "Do you wish to proceed despite these maintainer changes?"
+    fi
+
 
     confirm "Do you wish to review and install these AUR dependencies?"
 
@@ -167,7 +217,7 @@ if [[ "$1" == "-S" ]]; then
   echo -e "${RED}WARNING: AUR PACKAGES ARE DANGEROUS${NC}"
   confirm "Continue?"
   fetch_safety_card "$2"
-  confirm "Do you trust this?"
+  check_maintainer_change "$2"
 
   echo -e "${RED}Since this is an AUR package, saur will enforce viewing the PKGBUILD, it will be displayed using bat, you can press Q to exit bat and will be asked for confirmation before continuing.${NC}\n"
   read -n 1 -s -r -p "Press any key to continue..."
