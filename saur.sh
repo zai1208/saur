@@ -65,6 +65,52 @@ cache_current_pkgbuild() {
   cp "$2" "$CACHE_DIR/$1.PKGBUILD"
 }
 
+fetch_aur_deps() {
+  local missing_aur_deps=()
+  mapfile -t missing_aur_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | grep "not found in the repositories" | awk -F"'" '{print $2}')
+
+  if [[ ${#missing_aur_deps[@]} -gt 0 ]]; then
+    echo -e "${RED}The following AUR dependencies are required:${NC}"
+    for dep in "${missing_aur_deps[@]}"; do
+      json=$(curl -fsSL "https://aur.archlinux.org/rpc/v5/info/$dep")
+      maintainer=$(echo "$json" | jq -r '.results[0].Maintainer')
+      last_update_epoch=$(echo "$json" | jq -r '.results[0].LastModified')
+      last_update_date=$(date -d "@$last_update_epoch" +"%Y-%m-%d" 2>/dev/null || date -r "$last_update_epoch" +"%Y-%m-%d")
+      echo " - $dep | Maintainer: $maintainer | Last Updated: $last_update_date"
+    done
+
+    confirm "Do you wish to review and install these AUR dependencies?"
+
+    read -rp "Do you want to skip viewing PKGBUILDs for dependencies? [y/N]: " skip_view
+
+    for dep in "${missing_aur_deps[@]}"; do
+      echo
+      echo -e "${RED}Handling AUR dependency: $dep${NC}"
+
+      if [[ "$skip_view" != [yY] ]]; then
+        echo -e "${RED}Viewing PKGBUILD for $dep${NC}\n"
+        read -n 1 -s -r -p "Press any key to continue..."
+        curl -fsSL "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$dep" | bat --language=bash
+        echo
+        confirm "Have you verified that the PKGBUILD is safe and wish to continue?"
+      fi
+
+      tmpdir=$(mktemp -d)
+      git clone "https://aur.archlinux.org/$dep.git" "$tmpdir/$dep"
+      cd "$tmpdir/$dep"
+      makepkg -si
+
+      sed -i "/^$dep /d" "$INSTALLED_LIST"
+      version=$(pacman -Q "$dep" | awk '{print $2}')
+      echo "$dep $version" >> "$INSTALLED_LIST"
+      cp PKGBUILD "$CACHE_DIR/$dep.PKGBUILD"
+
+      cd - >/dev/null
+      rm -rf "$tmpdir"
+    done
+  fi
+}
+
 update() {
   echo -e "${RED}Checking for AUR updates...${NC}"
 
@@ -78,7 +124,8 @@ update() {
     last_update_date=$(date -d "@$last_update_epoch" +"%Y-%m-%d" 2>/dev/null || date -r "$last_update_epoch" +"%Y-%m-%d")
 
     if [[ "$upstream_version" != "$current_version" ]]; then
-      echo -e "\nUpdate available for $pkg: $current_version -> $upstream_version"
+      echo
+      echo -e "Update available for $pkg: $current_version -> $upstream_version"
       echo "Maintainer: $maintainer"
       echo "Last Updated: $last_update_date"
 
@@ -111,7 +158,7 @@ if [[ "$1" == "-S" ]]; then
   echo -e "${RED}WARNING: AUR PACKAGES ARE DANGEROUS${NC}"
   confirm "Continue?"
   fetch_safety_card "$2"
-  confirm "Do you trust these details?"
+  confirm "Do you trust this?"
 
   echo -e "${RED}Since this is an AUR package, saur will enforce viewing the PKGBUILD, it will be displayed using bat, you can press Q to exit bat and will be asked for confirmation before continuing.${NC}\n"
   read -n 1 -s -r -p "Press any key to continue..."
@@ -122,16 +169,18 @@ if [[ "$1" == "-S" ]]; then
   cd ~/$install_dir
   git clone "https://aur.archlinux.org/$2.git"
   cd "$2"
+
+  fetch_aur_deps
+
   makepkg -si
 
-  # Update installed list and cache PKGBUILD
   sed -i "/^$2 /d" "$INSTALLED_LIST"
   version=$(pacman -Q "$2" | awk '{print $2}')
   echo "$2 $version" >> "$INSTALLED_LIST"
   cp PKGBUILD "$CACHE_DIR/$2.PKGBUILD"
 
-elif [[ "$1" == "-Syu" ]]; then
+elif [[ "$1" == "-Su" ]]; then
   update
 else
-  echo "Usage: $0 -S <package> | -Syu"
+  echo "Usage: $0 -S <package> | -Su"
 fi
