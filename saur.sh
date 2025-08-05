@@ -70,14 +70,23 @@ fetch_aur_deps() {
   mapfile -t missing_aur_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | grep "not found in the repositories" | awk -F"'" '{print $2}')
 
   if [[ ${#missing_aur_deps[@]} -gt 0 ]]; then
-    echo -e "${RED}The following AUR dependencies are required:${NC}"
+    printf "\n${RED}==== AUR Dependency Summary ====${NC}\n"
+    printf "%-20s | %-15s | %-10s | %-6s | %-10s | %-10s\n" "Package" "Maintainer" "Updated" "Votes" "Popularity" "Submitted"
+    printf -- "---------------------------------------------------------------\n"
+
     for dep in "${missing_aur_deps[@]}"; do
       json=$(curl -fsSL "https://aur.archlinux.org/rpc/v5/info/$dep")
       maintainer=$(echo "$json" | jq -r '.results[0].Maintainer')
+      submitted_epoch=$(echo "$json" | jq -r '.results[0].FirstSubmitted')
+      submitted=$(date -d "@$submitted_epoch" +"%Y-%m-%d" 2>/dev/null || date -r "$submitted_epoch" +"%Y-%m-%d")
       last_update_epoch=$(echo "$json" | jq -r '.results[0].LastModified')
       last_update_date=$(date -d "@$last_update_epoch" +"%Y-%m-%d" 2>/dev/null || date -r "$last_update_epoch" +"%Y-%m-%d")
-      echo " - $dep | Maintainer: $maintainer | Last Updated: $last_update_date"
+      votes=$(echo "$json" | jq -r '.results[0].NumVotes')
+      popularity=$(echo "$json" | jq -r '.results[0].Popularity')
+      printf "%-20s | %-15s | %-10s | %-6s | %-10s | %-10s\n" "$dep" "$maintainer" "$last_update_date" "$votes" "$popularity" "$submitted"
     done
+
+    printf "${RED}=================================${NC}\n"
 
     confirm "Do you wish to review and install these AUR dependencies?"
 
