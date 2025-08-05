@@ -1,7 +1,7 @@
 # Maintainer: zai1208 <zai1208@outlook.com>
 pkgname=saur
 pkgver=0.1
-pkgrel=1
+pkgrel=3
 pkgdesc="A simple and \"secure\" AUR helper written entirely in Bash"
 arch=('any')
 url="https://github.com/zai1208/saur"
