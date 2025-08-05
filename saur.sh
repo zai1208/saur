@@ -111,7 +111,7 @@ if [[ "$1" == "-S" ]]; then
   echo -e "${RED}WARNING: AUR PACKAGES ARE DANGEROUS${NC}"
   confirm "Continue?"
   fetch_safety_card "$2"
-  confirm "Do you trust this?"
+  confirm "Do you trust these details?"
 
   echo -e "${RED}Since this is an AUR package, saur will enforce viewing the PKGBUILD, it will be displayed using bat, you can press Q to exit bat and will be asked for confirmation before continuing.${NC}\n"
   read -n 1 -s -r -p "Press any key to continue..."
@@ -130,8 +130,8 @@ if [[ "$1" == "-S" ]]; then
   echo "$2 $version" >> "$INSTALLED_LIST"
   cp PKGBUILD "$CACHE_DIR/$2.PKGBUILD"
 
-elif [[ "$1" == "-Su" ]]; then
+elif [[ "$1" == "-Syu" ]]; then
   update
 else
-  echo "Usage: $0 -S <package> | -Su"
+  echo "Usage: $0 -S <package> | -Syu"
 fi
