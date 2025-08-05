@@ -43,7 +43,7 @@ confirm() {
 }
 
 install () {
-  echo -e "${RED}Since this is an AUR package, saur will enforce viewing the PKGBUILD, it will be displayed using bat, you can press Q to exit less and will be asked for confirmation before continuing${NC}\n"
+  echo -e "${RED}Since this is an AUR package, saur will enforce viewing the PKGBUILD, it will be displayed using bat, you can press Q to exit bat and will be asked for confirmation before continuing${NC}\n"
   read -n 1 -s -r -p "Press any key to continue..."
   curl -fsSL "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=$1" | bat --language=bash
   echo
