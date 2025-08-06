@@ -9,6 +9,7 @@ INSTALLED_LIST="$SAUR_DIR/installed.list"
 CACHE_DIR="$HOME/.cache/saur/pkgb"
 
 mkdir -p "$SAUR_DIR" "$CACHE_DIR"
+touch "$INSTALLED_LIST"
 
 # --- Helper Functions ---
 confirm() {
