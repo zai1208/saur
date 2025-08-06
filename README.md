@@ -7,6 +7,13 @@ I had two goals with this project:
 
 2 - it must enforce security practices, as such it forces the viewing of the PKGBUILD and displays a "safety card" showing the maintainer, package name, date submitted, date last updated, votes, and popularity, it also shows id the maintainer has changes since last time
 
+All options in saur default to N, so explicit instruction to install is required and accidental triggering is easier to avoid
+
+> [!CAUTION]
+> This is strongly advised against, but it is ultimately your decision as to how secure you want your system
+
+Now, of course if you wanted to you can pipe the output of `yes` to saur, but that defeats its main purpose and is strongly advised against
+
 ## AUR only dependenices
 The way saur handles AUR only dependencies is in the following order:
 ```
