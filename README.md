@@ -1,5 +1,5 @@
-# saur.sh
-A **s**imple and "secure" **AUR** helper written purely in bash
+# saur
+A **S**imple and "secure" **AUR** helper written purely in bash
 
 I had two goals with this project:
 
@@ -7,7 +7,16 @@ I had two goals with this project:
 
 2 - it must enforce security practices, as such it forces the viewing of the PKGBUILD and displays a "safety card" showing the maintainer, package name, date submitted, date last updated, votes, and popularity, it also shows id the maintainer has changes since last time
 
-## usage
+## AUR only dependenices
+The way saur handles AUR only dependencies is in the following order:
+```
+1. Show "safety card" + any maintainer changes since last time (if package was previously installed)
+2. Show PKGBUILDs individually and ask for confirmation after each
+3. Build dependencies one by one
+4. Then build the actual package
+```
+
+## Usage
 currently supports 2 arguments:
 
 |Command | effect |
