@@ -5,7 +5,7 @@ I had two goals with this project:
 
 1 - it must be written in bash as most Arch users should be familiar with bash and can easily understand what the script is doing
 
-2 - it must enforce security practices, as such it forces the viewing of the PKGBUILD and displays a "safety card" showing the maintainer, package name, date submitted, date last updated, votes, and popularity, it also shows id the maintainer has changes since last time
+2 - it must enforce security practices, as such it forces the viewing of the PKGBUILD and displays a "safety card" showing the maintainer, package name, date submitted, date last updated, votes, and popularity, it also shows if the maintainer has changes since last time
 
 All options in saur default to N, so explicit instruction to install is required and accidental triggering is easier to avoid
 
