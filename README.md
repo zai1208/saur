@@ -9,10 +9,10 @@ I had two goals with this project:
 
 All options in saur default to N, so explicit instruction to install is required and accidental triggering is easier to avoid
 
-> [!CAUTION]
-> This is strongly advised against, but it is ultimately your decision as to how secure you want your system
-
 Now, of course if you wanted to you can pipe the output of `yes` to saur, but that defeats its main purpose and is strongly advised against
+
+> [!CAUTION]
+> The above is strongly advised against, but it is ultimately your decision as to how secure you want your system
 
 ## AUR only dependenices
 The way saur handles AUR only dependencies is in the following order:
