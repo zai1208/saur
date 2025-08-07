@@ -104,8 +104,8 @@ fetch_aur_deps() {
 
     for dep in "${missing_aur_deps[@]}"; do
       # Check if package is in official repos
-      if pacman -Si "$pkg" &>/dev/null; then
-          echo "$pkg is in the official repos, skipping AUR check"
+      if pacman -Si "$dep" &>/dev/null; then
+          echo "$dep is in the official repos, skipping AUR check"
           continue
       fi
       
