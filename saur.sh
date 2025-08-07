@@ -22,6 +22,16 @@ confirm() {
   fi
 }
 
+run_in_container() {
+  # Mount current directory inside container as /src
+  podman run --rm -it \
+    -v "$(pwd)":/src:z \
+    archlinux:latest /bin/bash -c "
+      pacman -Sy --noconfirm base base-devel linux linux-firmware &&
+      cd /src &&
+      ./saur --inside-container $*"
+}
+
 check_maintainer_change() {
   pkg="$1"
   cache_file="$SAUR_DIR/maintainers.list"
@@ -250,6 +260,11 @@ if [[ "$1" == "-S" ]]; then
 
 elif [[ "$1" == "-Su" ]]; then
   update
+elif [[ "$1" == "--container" ]]; then
+  # Run inside container mode
+  shift  # remove --container from args
+  run_in_container "$@"
+  exit $?
 else
   echo "Usage: $0 -S <package> | -Su"
 fi
