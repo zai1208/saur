@@ -262,7 +262,7 @@ elif [[ "$1" == "-Su" ]]; then
   update
 elif [[ "$1" == "--container" ]]; then
   # Run inside container mode
-  shift  # remove --container from args
+  set -- "${@:1:$(($#-1))}"  # remove --container from args
   run_in_container "$@"
   exit $?
 else
