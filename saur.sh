@@ -235,6 +235,12 @@ update() {
 }
 
 # --- Main Logic ---
+if [[ "${BASH_ARGV[0]}" == "--container" ]]; then
+  # Run inside container mode
+  set -- "${@:1:$(($#-1))}"  # remove --container from args
+  run_in_container "$@"
+  exit $?
+fi
 if [[ "$1" == "-S" ]]; then
   fetch_safety_card "$2"
   check_maintainer_change "$2"
@@ -260,11 +266,6 @@ if [[ "$1" == "-S" ]]; then
 
 elif [[ "$1" == "-Su" ]]; then
   update
-elif [[ "${BASH_ARGV[0]}" == "--container" ]]; then
-  # Run inside container mode
-  set -- "${@:1:$(($#-1))}"  # remove --container from args
-  run_in_container "$@"
-  exit $?
 else
   echo "Usage: $0 -S <package> | -Su"
 fi
