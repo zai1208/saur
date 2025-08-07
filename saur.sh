@@ -260,7 +260,7 @@ if [[ "$1" == "-S" ]]; then
 
 elif [[ "$1" == "-Su" ]]; then
   update
-elif [[ "$1" == "--container" ]]; then
+elif [[ "${BASH_ARGV[0]}" == "--container" ]]; then
   # Run inside container mode
   set -- "${@:1:$(($#-1))}"  # remove --container from args
   run_in_container "$@"
