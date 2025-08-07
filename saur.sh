@@ -103,6 +103,12 @@ fetch_aur_deps() {
     printf -- "---------------------------------------------------------------\n"
 
     for dep in "${missing_aur_deps[@]}"; do
+      # Check if package is in official repos
+      if pacman -Si "$pkg" &>/dev/null; then
+          echo "$pkg is in the official repos, skipping AUR check"
+          continue
+      fi
+      
       json=$(curl -fsSL "https://aur.archlinux.org/rpc/v5/info/$dep")
       maintainer=$(echo "$json" | jq -r '.results[0].Maintainer')
       submitted_epoch=$(echo "$json" | jq -r '.results[0].FirstSubmitted')
