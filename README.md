@@ -15,6 +15,9 @@ Now, of course if you wanted to you can pipe the output of `yes` to saur, but th
 > The above is strongly advised against, but it is ultimately your decision as to how secure you want your system
 
 ## AUR only dependenices
+> [!WARNING]
+> This is not fully functional yet
+
 The way saur handles AUR only dependencies is in the following order:
 ```
 1. Show "safety card" + any maintainer changes since last time (if package was previously installed)
