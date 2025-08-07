@@ -226,8 +226,6 @@ update() {
 
 # --- Main Logic ---
 if [[ "$1" == "-S" ]]; then
-  echo -e "${RED}WARNING: AUR PACKAGES ARE DANGEROUS${NC}"
-  confirm "Continue?"
   fetch_safety_card "$2"
   check_maintainer_change "$2"
 
