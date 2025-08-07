@@ -1,13 +1,13 @@
 # Maintainer: zai1208 <zai1208@outlook.com>
 pkgname=saur
-pkgver=0.1
-pkgrel=3
+pkgver=0.5
+pkgrel=1
 pkgdesc="A simple and \"secure\" AUR helper written entirely in Bash"
 arch=('any')
 url="https://github.com/zai1208/saur"
 license=('GPL-3.0-or-later')
 makedepends=(git)
-depends=(bat bash)
+depends=(bat bash podman)
 source=("git+$url")
 sha256sums=('SKIP')
 
