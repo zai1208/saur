@@ -97,20 +97,6 @@ fetch_aur_deps() {
   if [[ ${#missing_aur_deps[@]} -gt 0 ]]; then
     maintainer_changed=()
     cache_file="$SAUR_DIR/maintainers.list"
-    old_maintainer=""
-    if grep -q "^$dep:" "$cache_file" 2>/dev/null; then
-      old_maintainer=$(grep "^$dep:" "$cache_file" | cut -d':' -f2-)
-    fi
-    
-    # Add to maintainer_changed[] if changed
-    if [[ "$old_maintainer" != "" && "$old_maintainer" != "$maintainer" ]]; then
-      maintainer_changed+=("$dep:$old_maintainer -> $maintainer")
-    fi
-    
-    # Update maintainer cache
-    grep -v "^$dep:" "$cache_file" 2>/dev/null > "$cache_file.tmp"
-    echo "$dep:$maintainer" >> "$cache_file.tmp"
-    mv "$cache_file.tmp" "$cache_file"
 
     printf "\n${RED}==== AUR Dependency Summary ====${NC}\n"
     printf "%-20s | %-15s | %-10s | %-6s | %-10s | %-10s\n" "Package" "Maintainer" "Updated" "Votes" "Popularity" "Submitted"
@@ -126,6 +112,21 @@ fetch_aur_deps() {
       votes=$(echo "$json" | jq -r '.results[0].NumVotes')
       popularity=$(echo "$json" | jq -r '.results[0].Popularity')
       printf "%-20s | %-15s | %-10s | %-6s | %-10s | %-10s\n" "$dep" "$maintainer" "$last_update_date" "$votes" "$popularity" "$submitted"
+
+      # Now check maintainer change for this dep:
+      old_maintainer=""
+      if grep -q "^$dep:" "$cache_file" 2>/dev/null; then
+        old_maintainer=$(grep "^$dep:" "$cache_file" | cut -d':' -f2-)
+      fi
+
+      if [[ "$old_maintainer" != "" && "$old_maintainer" != "$maintainer" ]]; then
+        maintainer_changed+=("$dep: $old_maintainer -> $maintainer")
+      fi
+
+      # Update cache with current maintainer for this dep
+      grep -v "^$dep:" "$cache_file" 2>/dev/null > "$cache_file.tmp"
+      echo "$dep:$maintainer" >> "$cache_file.tmp"
+      mv "$cache_file.tmp" "$cache_file"
     done
 
     printf "${RED}=================================${NC}\n"
@@ -137,7 +138,6 @@ fetch_aur_deps() {
       done
       confirm "Do you wish to proceed despite these maintainer changes?"
     fi
-
 
     confirm "Do you wish to review and install these AUR dependencies?"
 
