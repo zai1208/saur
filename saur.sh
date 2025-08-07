@@ -92,7 +92,7 @@ cache_current_pkgbuild() {
 
 fetch_aur_deps() {
   local missing_aur_deps=()
-  mapfile -t missing_aur_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | grep "not found in the repositories" | awk -F"'" '{print $2}')
+  mapfile -t missing_aur_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | awk '/^  ->/ { print $2 }')
 
   if [[ ${#missing_aur_deps[@]} -gt 0 ]]; then
     maintainer_changed=()
