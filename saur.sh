@@ -92,7 +92,17 @@ cache_current_pkgbuild() {
 
 fetch_aur_deps() {
   local missing_aur_deps=()
-  mapfile -t missing_aur_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | awk '/^  ->/ { print $2 }')
+  mapfile -t raw_deps < <(makepkg -o --syncdeps --nobuild 2>&1 | awk '/^  ->/ { print $2 }')
+
+  missing_aur_deps=()
+  # Check if package is in official repos
+  for pkg in "${raw_deps[@]}"; do
+    if ! pacman -Si "$pkg" &>/dev/null; then
+      missing_aur_deps+=("$pkg")
+    else
+      echo "Skipping $pkg because it is in the official repos"
+    fi
+  done
 
   if [[ ${#missing_aur_deps[@]} -gt 0 ]]; then
     maintainer_changed=()
@@ -103,10 +113,6 @@ fetch_aur_deps() {
     printf -- "---------------------------------------------------------------\n"
 
     for dep in "${missing_aur_deps[@]}"; do
-      # Check if package is in official repos
-      if pacman -Si "$dep" &>/dev/null; then
-          continue
-      fi
       
       json=$(curl -fsSL "https://aur.archlinux.org/rpc/v5/info/$dep")
       maintainer=$(echo "$json" | jq -r '.results[0].Maintainer')
